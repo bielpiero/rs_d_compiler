@@ -9,7 +9,9 @@ DorisLipSync::DorisLipSync (SerialPort* mc, int faceId) {
 	this->faceId = faceId;
 	tts = new TextToSpeech;
 	tts->setDefaultConfiguration();
-
+	//tts->increasePitch();
+	//tts->increasePitch();
+	//tts->increasePitch();
 	gestures = new std::vector<FaceGesture*>();
 	
     xml_document<> doc;
@@ -113,10 +115,13 @@ void DorisLipSync::textToViseme(const std::string str){
 
 	std::string text = textNorm(wtxt);
 
+	text = removeExtraChars(text, '/');
+	text = removeExtraChars(text, '\\');
+	text = removeExtraChars(text, '<');
+	text = removeExtraChars(text, '>');
 	text = removeExtraChars(text, 63);
-	//text = removeExtraChars(text, 168);
+	text = removeExtraChars(text, 63);
 	text = removeExtraChars(text, 33);
-	//text = removeExtraChars(text, 173);
 	text = removeExtraChars(text, 44);
 	text = removeExtraChars(text, 46);
 

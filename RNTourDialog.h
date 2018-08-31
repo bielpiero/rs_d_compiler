@@ -2,18 +2,20 @@
 #define RN_TOUR_DIALOG_H
 
 #include "DorisLipSync.h"
+#include "RNGesturesTask.h"
 
 class RNTourDialog{
 	public:
-		RNTourDialog(DorisLipSync* lips);
+		RNTourDialog(RNGesturesTask* head, DorisLipSync* lips);
 		virtual ~RNTourDialog();
 		void lex();
 		void parse();
 		void parse(std::list<std::string> functionTokens, std::map<std::string, std::string> *functionSymbols);
 	private:
-		void printList(std::list<std::string> l);
-		void printMap(std::map<std::string, std::string> m);
-		std::map<std::string, std::string> processOptions(std::string opts);
+		void loadPredifinedSymbols();
+		bool evaluateCondition(std::string condition);
+		std::map<std::string, std::string> createOptionsMap(std::string opts);
+		void processOptions(std::map<std::string, std::string> opts);
 	private:
 		struct wcontent_t{
 			std::map<std::string, std::string> symbols;
@@ -24,6 +26,7 @@ class RNTourDialog{
 
 		std::ifstream file;
 		DorisLipSync* lips;
+		RNGesturesTask* head;
 };
 
 #endif

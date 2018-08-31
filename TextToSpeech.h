@@ -35,9 +35,9 @@ class TextToSpeech{
 		void setDefaultConfiguration();
         void setString(std::string text);
         void setVolume(unsigned int vol = 66);
-        void setVoiceType(unsigned int type = 8);
+        void setVoiceType(unsigned int type = 2);
         void setSpeakingRate(unsigned int wordsPerMinute = 200);
-        void setLanguage(unsigned int type = 2);
+        void setLanguage(unsigned int type = 1);
         void playDemo(unsigned int demo);
         void setParser(int parser = 1);
         void increasePitch();
