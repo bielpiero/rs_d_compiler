@@ -1,12 +1,12 @@
 #ifndef RN_TOUR_DIALOG_H
 #define RN_TOUR_DIALOG_H
 
-#include "DorisLipSync.h"
+//#include "DorisLipSync.h"
 #include "RNGesturesTask.h"
 
 class RNTourDialog{
 	public:
-		RNTourDialog(RNGesturesTask* head, DorisLipSync* lips);
+		RNTourDialog(/*RNGesturesTask* head, DorisLipSync* lips*/);
 		virtual ~RNTourDialog();
 		void lex();
 		void parse();
@@ -25,8 +25,8 @@ class RNTourDialog{
 		std::map<std::string, std::string> globalSymbols;
 
 		std::ifstream file;
-		DorisLipSync* lips;
-		RNGesturesTask* head;
+		//DorisLipSync* lips;
+		//RNGesturesTask* head;
 };
 
 #endif

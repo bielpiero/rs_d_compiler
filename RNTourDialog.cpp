@@ -1,9 +1,9 @@
 #include "RNTourDialog.h"
 
-RNTourDialog::RNTourDialog(RNGesturesTask* head, DorisLipSync* lips){
+RNTourDialog::RNTourDialog(/*RNGesturesTask* head, DorisLipSync* lips*/){
 	std::setlocale(LC_ALL, "es_ES");
-	this->head = head;
-	this->lips = lips;
+	//this->head = head;
+	//this->lips = lips;
 	file.open("tts/disam-01.text");
 	if(!file){
 		printf("could not load file\n");
@@ -79,6 +79,7 @@ void RNTourDialog::lex(){
 	std::string cnd = "";
 	tokens.clear();
 	unsigned long long ifcounter = 0, forcounter = 0, whilecounter = 0;
+	int parcount = 0;
 	int state = 0, isnumber = 0, varstarted = 0;
 	int functionStarted = 0;
 	int callfunction = 0;
@@ -113,6 +114,8 @@ void RNTourDialog::lex(){
 				str = "";
 				state = 0;
 				tok = "";
+			} else if(state == 1 and ifcondition == 1){
+				tok = " ";
 			} else if(state == 0 or state == 1){
 				tok = "";
 			} else if (state == 2){
@@ -124,6 +127,7 @@ void RNTourDialog::lex(){
 				functionNameStatus = 0;
 				functions.emplace(functionName, wcontent_t());
 				str = "";
+				tok = "";
 			} else if(varstarted == 1 and var != ""){
 				tokens.insert(tpos, "VAR:" + var);
 				varstarted = 0;
@@ -133,6 +137,7 @@ void RNTourDialog::lex(){
 				tokens.insert(tpos, "FNC:" + str);
 				callfunction = 0;
 				str = "";
+				tok = "";
 			} else if(state == 2 and isnumber == 1){
 				if(str != ""){
 					tokens.insert(tpos, "NUM:" + str);
@@ -141,8 +146,11 @@ void RNTourDialog::lex(){
 				str = "";
 				state = 0;
 				tok = "";
+			} else if(state == 1 and ifcondition == 1){
+				tok = " ";
+			} else {
+				tok = "";
 			}
-			tok = "";
 		} else if(tok == "function"){
 			if(functionStarted == 0){
 				functionStarted = 1;
@@ -162,7 +170,9 @@ void RNTourDialog::lex(){
 				currentContent.tokens = tokens;
 				functions[functionName] = currentContent;
 				tokens.clear();
-				
+				ifcounter = 0;
+				forcounter = 0; 
+				whilecounter = 0;
 			} else {
 				functionStarted = -1;
 			}
@@ -205,7 +215,7 @@ void RNTourDialog::lex(){
 			varstarted = 1;
 			var = "";
 			tok = "";
-		} else if (tok == "(" or tok == "["){
+		} else if ((tok == "(" or tok == "[") and state == 0){
 			state = 1;
 			tok = "";
 		} else if(tok == "=" and state == 0){
@@ -250,28 +260,41 @@ void RNTourDialog::lex(){
 
 			}
 		} else if (tok == ")"){
-			if(state == 1){
+			if(parcount > 0){
+				parcount--;
 				if(ifcondition == 1){
-					tokens.insert(tpos, "CND:" + cnd);
-					tokens.insert(tpos, "BIF:" + std::to_string(ifcounter));
-					tokens.insert(tpos, "BEL:" + std::to_string(ifcounter));
-					tokens.insert(tpos, "EIF:" + std::to_string(ifcounter++));
-					tpos = std::prev(tpos, 2);
-					ifcondition = 0;
-					cnd = "";
-				} else if(str != ""){
-					tokens.insert(tpos, "VAR:" + str);
+					cnd += tok;
+					tok = "";
+				} else if(varstarted == 1){
+					var += tok;
+					tok = "";
+				} else {
+					str += tok;
+					tok = "";
 				}
-			} else if(state == 2){
-				if(isnumber == 1){
-					tokens.insert(tpos, "NUM:" + str);
-					isnumber = 0;
+			} else {
+				if(state == 1){
+					if(ifcondition == 1){
+						tokens.insert(tpos, "CND:" + cnd);
+						tokens.insert(tpos, "BIF:" + std::to_string(ifcounter));
+						tokens.insert(tpos, "BEL:" + std::to_string(ifcounter));
+						tokens.insert(tpos, "EIF:" + std::to_string(ifcounter++));
+						tpos = std::prev(tpos, 2);
+						ifcondition = 0;
+						cnd = "";
+					} else if(str != ""){
+						tokens.insert(tpos, "VAR:" + str);
+					}
+				} else if(state == 2){
+					if(isnumber == 1){
+						tokens.insert(tpos, "NUM:" + str);
+						isnumber = 0;
+					}
 				}
+				state = 0;
+				str = "";
 			}
-			str = "";
 			tok = "";
-			state = 0;
-			
 		} else if(tok == "]"){
 			if(state == 1){
 				tokens.insert(tpos, "OPT:" + str);
@@ -284,6 +307,9 @@ void RNTourDialog::lex(){
 			tok = "";
 		} else if(state > 0){
 			if(ifcondition == 1){
+				if(tok == "(" or tok == " ("){
+					parcount++;
+				}
 				cnd += tok;
 				tok = "";
 			} else if(tok == "#"){
@@ -448,7 +474,7 @@ void RNTourDialog::parse(std::list<std::string> functionTokens, std::map<std::st
 						printf("SAY STRING %s WITH OPTIONS: %s\n", (*it3).substr(4).c_str(), (*it2).substr(4).c_str());
 						std::map<std::string, std::string> opts = createOptionsMap((*it2).substr(4));
 						processOptions(opts);
-						lips->textToViseme((*it3).substr(4));
+						//lips->textToViseme((*it3).substr(4));
 						it = std::next(it, 3);
 					}
 				}
@@ -487,15 +513,35 @@ void RNTourDialog::parse(std::list<std::string> functionTokens, std::map<std::st
 			}
 		} else if((*it) == "IF"){
 			bool r = evaluateCondition((*it2).substr(4)); //hacer recursive descent parser
-			ifIdsStack.push((*it3).substr(4));
 			if(r){
 				it = std::next(it, 3);
+				ifIdsStack.push((*it3).substr(4));
 			} else {
-				std::string elsename = "BEL:" + ifIdsStack.top();
+				std::string elsename = "BEL:" + (*it3).substr(4);
 				while((*it) != elsename){
 					it++;
 				}
+
 			}
+		} else if((*it).substr(0, 3) == "BEL"){
+			if(not ifIdsStack.empty()){
+				if(ifIdsStack.top() == (*it).substr(4)){
+					std::string elsename = "EIF:" + ifIdsStack.top();
+					while((*it) != elsename){
+						it++;
+					}
+					ifIdsStack.pop();
+				}
+			} else {
+				it++;
+			}
+		} else if((*it).substr(0, 3) == "EIF"){
+			if(not ifIdsStack.empty()){
+				if(ifIdsStack.top() == (*it).substr(4)){
+					ifIdsStack.pop();
+				}
+			}
+			it++;
 		} else {
 			it++;
 		}
@@ -529,12 +575,12 @@ void RNTourDialog::processOptions(std::map<std::string, std::string> opts){
 		if(optsIt->first == "face"){
 			op = globalSymbols.find("FACE:" + optsIt->second);
 			if(op != opts.end()){
-				head->setGesture(op->second.substr(3));
+				//head->setGesture(op->second.substr(3));
 			}
 		} else if(optsIt->first == "attention"){
 			op = globalSymbols.find("ATTN:" + optsIt->second);
 			if(op != opts.end()){
-				head->setGesture(op->second.substr(3));
+				//head->setGesture(op->second.substr(3));
 			}
 		}
 	}
