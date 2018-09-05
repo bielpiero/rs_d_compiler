@@ -32,6 +32,7 @@
 #include <locale>
 #include <algorithm>
 #include <stack>
+#include <regex>
 
 #define RN_DEFAULT_PORT "/dev/ttyS0"
 

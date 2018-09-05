@@ -5,25 +5,30 @@
 #include "RNGesturesTask.h"
 
 class RNTourDialog{
+	private:
+		struct wcontent_t{
+			std::map<std::string, std::string> symbols;
+			std::list<std::string> tokens;
+			std::string result;
+		};
 	public:
 		RNTourDialog(/*RNGesturesTask* head, DorisLipSync* lips*/);
 		virtual ~RNTourDialog();
 		void lex();
 		void parse();
-		void parse(std::list<std::string> functionTokens, std::map<std::string, std::string> *functionSymbols);
+		void parse(std::string functionName, wcontent_t* content);
 	private:
 		void loadPredifinedSymbols();
-		bool evaluateCondition(std::string condition);
+
+		std::string evaluateExpression(std::string condition, std::map<std::string, std::string> symbols);
 		std::map<std::string, std::string> createOptionsMap(std::string opts);
 		void processOptions(std::map<std::string, std::string> opts);
+		std::list<std::string> tokenizeExpCond(std::string expr_cond);
+		void solveExpParenthesis(std::list<std::string>* tokens);
+		void solveExp(std::list<std::string>* tokens);
 	private:
-		struct wcontent_t{
-			std::map<std::string, std::string> symbols;
-			std::list<std::string> tokens;
-		};
 		std::map<std::string, wcontent_t > functions;
 		std::map<std::string, std::string> globalSymbols;
-
 		std::ifstream file;
 		//DorisLipSync* lips;
 		//RNGesturesTask* head;

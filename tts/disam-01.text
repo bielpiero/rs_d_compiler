@@ -1,26 +1,19 @@
-function entrance 
-	goto(#2,#0.9,#5)
-	if(hola and (hola2 or hola3) and (hola == hola) and ((hola < hola) or (hola == j)))
+function entrance(x, y)
+	var u = #1
+	var hola = #5
+	var pepito = #-3
+	goto(#2, #5, #0.9)
+	if(hola == u and pepito == "mañana" or (origin() < (#3 + #4)))
 		say("no")
 	endif
+	return #3
 endfunction
 
-function reception
-	say[attention=front; face=happy]("Hola chicos")
-	say[attention=right; face=surprise]("biénvenidos al centro de automática y robótica de la universidad politécnica de madrid")
-	say[attention=left; face=suspect]("seguidme por favor que os mostraré el laboratorio, los distintos grupos que hay, os explicaré que hace cada grupo y lo mas importante, os mostraré donde he nacido y quién es mi creador.")
-	turn(#90)
-	say("coloquemos nuestra atención a la izquierda")
-	say("subiendo por las escaleras están los despachos de los profesores.")
-	say("como mi creador me odia y no me ha puesto piernas, no puedo mostrarles la parte de arriba todavía.")
-	say("a la derecha están los principales despachos de los grupos de investigación.")
-	move(next)
-	say("vamos para ahí. iremos hasta el final del todo y mientras caminamos") 
-	say[mood=sad]("y yo rodando")
-	say("iré explicando como surgió el centro de automática y robótica.")
+function origin()
+	var u = "ooooo"
+	return u
 endfunction
 
-function main
-	call entrance
-	call reception
+function main()
+	entrance()
 endfunction
