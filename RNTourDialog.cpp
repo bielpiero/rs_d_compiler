@@ -708,7 +708,7 @@ void RNTourDialog::solveExpParenthesis(std::list<std::string>* tokens){
 }
 
 void RNTourDialog::solveExp(std::list<std::string>* tokens){
-
+	
 }
 
 std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
