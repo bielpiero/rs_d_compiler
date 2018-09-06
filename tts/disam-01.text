@@ -1,9 +1,7 @@
 function entrance(x, y)
-	var u = #1
-	var hola = #5
-	var pepito = #-3
+	var xxx = #2
 	goto(#2, #5, #0.9)
-	if(hola == u and pepito == "mañana" or (origin() < (#3 + #4)))
+	if(#8 * (#3 + #2 * #2) - (#8 - xxx) < #90)
 		say("no")
 	endif
 	return #3

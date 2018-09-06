@@ -607,7 +607,7 @@ void RNTourDialog::parse(std::string functionName, wcontent_t* content){
 		} else if((*it) == "IF"){
 			std::string r = evaluateExpression((*it2).substr(4), *functionSymbols); //hacer recursive descent parser
 
-			if(r == "1"){
+			if(r == "NUM:1"){
 				it = std::next(it, 3);
 				ifIdsStack.push((*it3).substr(4));
 			} else {
@@ -646,7 +646,7 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 	std::stack<std::string> exprStack;
 	std::string result = "";
 	std::list<std::string> tokens = tokenizeExpCond(expr);
-	RNUtils::printList<std::string>(tokens);
+
 	std::list<std::string>::iterator itokens;
 	bool ok_sofar = true;
 	for(itokens = tokens.begin(); itokens != tokens.end() and ok_sofar; itokens++){
@@ -677,14 +677,16 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 		}
 	}
 
-	RNUtils::printList<std::string>(tokens);
-
-	//solveExpParenthesis(&tokens, symbols);
+	solveExpParenthesis(&tokens);
+	if(tokens.size() > 1){
+		solveExp(&tokens);
+	}
 	result = tokens.front();
 	return result;
 }
 
 void RNTourDialog::solveExpParenthesis(std::list<std::string>* tokens){
+	RNUtils::printList<std::string>(*tokens);
 	std::list<std::string> mini_tokens;
 	std::list<std::string>::reverse_iterator itoks_s = std::find(tokens->rbegin(), tokens->rend(), "(");
 	int idx_start = RN_NONE, idx_end = RN_NONE;
@@ -695,20 +697,210 @@ void RNTourDialog::solveExpParenthesis(std::list<std::string>* tokens){
 	if(itoks_e != tokens->end()){
 		idx_end = std::distance(tokens->begin(), itoks_e);
 	}
-	if(idx_start != RN_NONE and idx_end != RN_NONE){
-		mini_tokens.insert(mini_tokens.end(), std::next(tokens->begin(), idx_start + 1), std::next(tokens->begin(), idx_end));
-		RNUtils::printList<std::string>(mini_tokens);
-		solveExp(&mini_tokens);
-		tokens->insert(std::next(tokens->begin(), idx_start), mini_tokens.front());
-		tokens->erase(std::next(tokens->begin(), idx_start), std::next(tokens->begin(), idx_end + 1));
 
+	if(idx_start != RN_NONE and idx_end != RN_NONE){
+		
+		mini_tokens.insert(mini_tokens.end(), std::next(tokens->begin(), idx_start + 1), std::next(tokens->begin(), idx_end));
+		solveExp(&mini_tokens);
+		tokens->erase(std::next(tokens->begin(), idx_start), std::next(tokens->begin(), idx_end + 1));
+		tokens->insert(std::next(tokens->begin(), idx_start), mini_tokens.front());
+		
+		solveExpParenthesis(tokens);
 	}
 	
-	std::cout << "Empieza en: " << idx_start << ", y termina en: " << idx_end << std::endl;
+	
 }
 
 void RNTourDialog::solveExp(std::list<std::string>* tokens){
-	
+	factor(tokens);
+	term(tokens);
+	simpExpr(tokens);
+}
+
+void RNTourDialog::factor(std::list<std::string>* tokens){
+	bool fac = true;
+	RNUtils::printList<std::string>(*tokens);
+	while(fac){
+		fac = false;
+		std::list<std::string>::iterator itTokens = tokens->begin();
+		int idx_start = RN_NONE, idx_end = RN_NONE, idx = 0;
+		std::string op1 = "", op2 = "", oper = "", result = "";
+		while(itTokens != tokens->end()){
+			if(*itTokens == "*" or *itTokens == "/" or *itTokens == "%" or *itTokens == "AND"){
+				fac = true;
+				op1 = *std::prev(itTokens);
+				op2 = *std::next(itTokens, 1);
+				oper = *itTokens;
+				idx_start = idx - 1;
+				idx_end = idx + 1;
+				itTokens = tokens->end();
+			} else {
+				itTokens++;
+				idx++;
+			}
+		}
+		if(fac){
+			if(op1 != "" and op2 != "" and oper != ""){
+				if(op1.substr(0, 3) == op2.substr(0, 3)){
+					if(op1.substr(0, 3) == "NUM"){
+						float res;
+						if(oper == "*"){
+							res = std::stof(op1.substr(4)) * std::stof(op2.substr(4));
+						} else if(oper == "/"){
+							res = std::stof(op1.substr(4)) / std::stof(op2.substr(4));
+						} else if(oper == "%"){
+							res = (float)(static_cast<int>(std::stof(op1.substr(4))) % static_cast<int>(std::stof(op2.substr(4))));
+						} else if(oper == "AND"){
+							res = std::stof(op1.substr(4)) and std::stof(op2.substr(4));
+						}
+						result = "NUM:" + std::to_string(res);
+					} else {
+						fprintf(stderr, "error: invalid type operation\n");
+					}
+				} else {
+					fprintf(stderr, "error: invalid type operation\n");
+				}
+			}
+
+			if(idx_start != RN_NONE and idx_end != RN_NONE){
+				tokens->erase(std::next(tokens->begin(), idx_start), std::next(tokens->begin(), idx_end + 1));
+				tokens->insert(std::next(tokens->begin(), idx_start), result);
+				
+			}
+		}
+		
+	}
+}
+
+void RNTourDialog::term(std::list<std::string>* tokens){
+	bool trm = true;
+	RNUtils::printList<std::string>(*tokens);
+	while(trm){
+		trm = false;
+		std::list<std::string>::iterator itTokens = tokens->begin();
+		int idx_start = RN_NONE, idx_end = RN_NONE, idx = 0;
+		std::string op1 = "", op2 = "", oper = "", result = "";
+		while(itTokens != tokens->end()){
+			if(*itTokens == "+" or *itTokens == "-" or *itTokens == "OR"){
+				trm = true;
+				op1 = *std::prev(itTokens);
+				op2 = *std::next(itTokens, 1);
+				oper = *itTokens;
+				idx_start = idx - 1;
+				idx_end = idx + 1;
+				std::cout << oper << std::endl;
+				itTokens = tokens->end();
+			} else {
+				itTokens++;
+				idx++;
+			}
+		}
+		if(trm){
+			if(op1 != "" and op2 != "" and oper != ""){
+				if(op1.substr(0, 3) == op2.substr(0, 3)){
+					if(op1.substr(0, 3) == "NUM"){
+						float res;
+						if(oper == "+"){
+							res = std::stof(op1.substr(4)) + std::stof(op2.substr(4));
+						} else if(oper == "-"){
+							res = std::stof(op1.substr(4)) - std::stof(op2.substr(4));
+						} else if(oper == "OR"){
+							res = std::stof(op1.substr(4)) or std::stof(op2.substr(4));
+						}
+						result = "NUM:" + std::to_string(res);
+					} else {
+						fprintf(stderr, "error: invalid type operation\n");
+					}
+				} else {
+					fprintf(stderr, "error: invalid type operation\n");
+				}
+			}
+
+			if(idx_start != RN_NONE and idx_end != RN_NONE){
+				tokens->erase(std::next(tokens->begin(), idx_start), std::next(tokens->begin(), idx_end + 1));
+				tokens->insert(std::next(tokens->begin(), idx_start), result);
+			}
+		}
+	}
+}
+
+void RNTourDialog::simpExpr(std::list<std::string>* tokens){
+	bool se = true;
+
+	while(se){
+		se = false;
+		std::list<std::string>::iterator itTokens = tokens->begin();
+		int idx_start = RN_NONE, idx_end = RN_NONE, idx = 0;
+		std::string op1 = "", op2 = "", oper = "", result = "";
+		while(itTokens != tokens->end()){
+			if(*itTokens == "EQU" or *itTokens == "NEQ" or *itTokens == "LT" or *itTokens == "LEQ" or *itTokens == "GT" or *itTokens == "GEQ"){
+				se = true;
+				op1 = *std::prev(itTokens);
+				op2 = *std::next(itTokens, 1);
+				oper = *itTokens;
+				idx_start = idx - 1;
+				idx_end = idx + 1;
+				std::cout << oper << std::endl;
+				itTokens = tokens->end();
+			} else {
+				itTokens++;
+				idx++;
+			}
+		}
+		if(se){
+			if(op1 != "" and op2 != "" and oper != ""){
+				if(op1.substr(0, 3) == op2.substr(0, 3)){
+					int res;
+					if(oper == "EQU"){
+						if(op1.substr(0, 3) == "NUM"){
+							res = std::stof(op1.substr(4)) == std::stof(op2.substr(4));
+						} else {
+							res = op1.substr(4) == op2.substr(4);
+						}
+					} else if(oper == "NEQ"){
+						if(op1.substr(0, 3) == "NUM"){
+							res = std::stof(op1.substr(4)) != std::stof(op2.substr(4));
+						} else {
+							res = op1.substr(4) != op2.substr(4);
+						}
+					} else if(oper == "LT"){
+						if(op1.substr(0, 3) == "NUM"){
+							res = std::stof(op1.substr(4)) < std::stof(op2.substr(4));
+						} else {
+							res = op1.substr(4) < op2.substr(4);
+						}
+					} else if(oper == "LEQ"){
+						if(op1.substr(0, 3) == "NUM"){
+							res = std::stof(op1.substr(4)) <= std::stof(op2.substr(4));
+						} else {
+							res = op1.substr(4) <= op2.substr(4);
+						}
+					} else if(oper == "GT"){
+						if(op1.substr(0, 3) == "NUM"){
+							res = std::stof(op1.substr(4)) > std::stof(op2.substr(4));
+						} else {
+							res = op1.substr(4) > op2.substr(4);
+						}
+					} else if(oper == "GEQ"){
+						if(op1.substr(0, 3) == "NUM"){
+							res = std::stof(op1.substr(4)) >= std::stof(op2.substr(4));
+						} else {
+							res = op1.substr(4) >= op2.substr(4);
+						}
+					}
+					result = "NUM:" + std::to_string(res);
+					
+				} else {
+					fprintf(stderr, "error: invalid type operation\n");
+				}
+			}
+
+			if(idx_start != RN_NONE and idx_end != RN_NONE){
+				tokens->erase(std::next(tokens->begin(), idx_start), std::next(tokens->begin(), idx_end + 1));
+				tokens->insert(std::next(tokens->begin(), idx_start), result);
+			}
+		}
+	}
 }
 
 std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
@@ -788,8 +980,8 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 				}
 				tokens.emplace_back(")");
 			}
-
-		} else if(*it == '+' or *it == '-' or *it == '*' or *it == '/'){
+			tok = "";
+		} else if(*it == '+' or *it == '-' or *it == '*' or *it == '/' or *it == '%'){
 			if(tok != "" or str != ""){
 				if(state == 2){
 					if(str != ""){

@@ -26,6 +26,10 @@ class RNTourDialog{
 		std::list<std::string> tokenizeExpCond(std::string expr_cond);
 		void solveExpParenthesis(std::list<std::string>* tokens);
 		void solveExp(std::list<std::string>* tokens);
+
+		void factor(std::list<std::string>* tokens);
+		void term(std::list<std::string>* tokens);
+		void simpExpr(std::list<std::string>* tokens);
 	private:
 		std::map<std::string, wcontent_t > functions;
 		std::map<std::string, std::string> globalSymbols;
