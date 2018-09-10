@@ -8,7 +8,9 @@ class RNTourDialog{
 	private:
 		struct wcontent_t{
 			std::map<std::string, std::string> symbols;
+			std::list<std::string> arguments;
 			std::list<std::string> tokens;
+			int requiredArguments;
 			std::string result;
 		};
 	public:
