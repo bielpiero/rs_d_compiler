@@ -2,7 +2,7 @@
 #include "RNTourDialog.h"
 //#include "SerialPort.h"
 //#include "DorisLipSync.h"
-#include "RNGesturesTask.h"
+//#include "RNGesturesTask.h"
 
 RNTourDialog* dialog;
 

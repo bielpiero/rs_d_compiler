@@ -2,7 +2,12 @@
 #define RN_TOUR_DIALOG_H
 
 //#include "DorisLipSync.h"
-#include "RNGesturesTask.h"
+#include "definitions.h"
+#include "RNUtils.h"
+#include "xml/rapidxml_print.hpp"
+#include "xml/rapidxml.hpp"
+
+
 
 class RNTourDialog{
 	private:
@@ -13,12 +18,20 @@ class RNTourDialog{
 			int requiredArguments;
 			std::string result;
 		};
+		struct eventstruct{
+			int requiredArguments;
+			std::string eventFunction;
+			//std::list<std::string> arguments;
+		};
 	public:
 		RNTourDialog(/*RNGesturesTask* head, DorisLipSync* lips*/);
 		virtual ~RNTourDialog();
 		void lex();
+		void parsemain();
 		void parse();
 		void parse(std::string functionName, wcontent_t* content);
+		void parseEvents(std::string eventName, eventstruct* content, int cont);
+		
 	private:
 		void loadPredifinedSymbols();
 
@@ -28,14 +41,18 @@ class RNTourDialog{
 		std::list<std::string> tokenizeExpCond(std::string expr_cond);
 		void solveExpParenthesis(std::list<std::string>* tokens);
 		void solveExp(std::list<std::string>* tokens);
-
+		std::string arrayValue(std::map<std::string, std::string> simbolos, std::string nombre, std::string position);
+		std::string assignArray(std::map<std::string, std::string> simbolo, std::string array, std::string pos, std::string exprs);
 		void factor(std::list<std::string>* tokens);
 		void term(std::list<std::string>* tokens);
 		void simpExpr(std::list<std::string>* tokens);
+		std::string assignSize(std::string word_size);
+
 	private:
 		std::map<std::string, wcontent_t > functions;
 		std::map<std::string, std::string> globalSymbols;
 		std::ifstream file;
+		std::map<std::string, eventstruct> events;
 		//DorisLipSync* lips;
 		//RNGesturesTask* head;
 };

@@ -1,17 +1,17 @@
-function entrance(x, y)
-	var i = #0
-	while(origin(i) < #5)
-		say("se repite")
-		i = i + #1
-	endw
-	say("after while")
-	origin(#3)
+
+
+A(entrance)
+onSPEAK(salida)
+function entrance(x)
+endfunction
+function salida(s)
+	
 endfunction
 
-function origin(p)
-	return p
-endfunction
 
 function main()
-	entrance(#3, #4)
+var hola = {#2,#3,#4}
+
+var i
+i = sizeof("hola") + #1
 endfunction

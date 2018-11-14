@@ -1,9 +1,7 @@
 #ifndef RN_GESTURES_TASK_H
 #define RN_GESTURES_TASK_H
 
-#include "RNUtils.h"
-#include "xml/rapidxml_print.hpp"
-#include "xml/rapidxml.hpp"
+
 #include "FaceGesture.h"
 #include "SerialPort.h"
 
