@@ -15,7 +15,7 @@ RNTourDialog::RNTourDialog(/*RNGesturesTask* head, DorisLipSync* lips*/){
 		loadPredifinedSymbols();
 		lex();
 		parse();
-		parsemain();
+		parseEvents();
 	}
 
 }
@@ -132,7 +132,7 @@ void RNTourDialog::lex(){
 						state = 1;
 						isnumber = 0;
 					}
-			} else if(tok != "" and expr_started == 0 and std::regex_match(tok, std::regex("[a-zA-Z_$][a-zA-Z_$0-9]*"))){
+			} else if(tok != "" and expr_started == 0 and std::regex_match(tok, std::regex(REGEX_STR))){
 				if(dame_pos == 0){	
 					if(functionarguments == 1){
 						tokens.insert(tpos, TOK_ARG2PTS_STR + tok);
@@ -189,7 +189,7 @@ void RNTourDialog::lex(){
 				str = "";
 				state = 0;
 				tok = "";
-			} else if(tok != "" and expr_started == 0 and std::regex_match(tok, std::regex("[a-zA-Z_$][a-zA-Z_$0-9]*"))){
+			} else if(tok != "" and expr_started == 0 and std::regex_match(tok, std::regex(REGEX_STR))){
 				if(functionarguments == 1){
 					tokens.insert(tpos, TOK_ARG2PTS_STR + tok);
 					argCount++;
@@ -349,7 +349,7 @@ void RNTourDialog::lex(){
 			//tokens.clear();
 			eventName = "";
 			eventName += tok;
-			events.emplace(eventName, eventstruct());
+			events.emplace(eventName, wevent_t());
 			//tokens.insert(tpos,"EVT:" + tok);
 			event = 1;
 			
@@ -359,7 +359,7 @@ void RNTourDialog::lex(){
 			//tokens.clear();
 			eventName = "";
 			eventName += tok;
-			events.emplace(eventName, eventstruct());
+			events.emplace(eventName, wevent_t());
 			//tokens.insert(tpos,"EVT:" + tok);
 			event = 1;
 			
@@ -369,7 +369,7 @@ void RNTourDialog::lex(){
 			//tokens.clear();
 			eventName = "";
 			eventName += tok;
-			events.emplace(eventName, eventstruct());
+			events.emplace(eventName, wevent_t());
 			//tokens.insert(tpos,"EVT:" + tok);
 			event = 1;
 			
@@ -379,14 +379,14 @@ void RNTourDialog::lex(){
 			//tokens.clear();
 			eventName = "";
 			eventName += tok;
-			events.emplace(eventName, eventstruct());
+			events.emplace(eventName, wevent_t());
 			//tokens.insert(tpos,"EVT:" + tok);
 			event = 1;
 			
 
 
 		
-		}else if(tok == "sizeof"){
+		} else if(tok == "sizeof"){
 			tokens.insert(tpos, "SIZEOF");
 			size = 1;
 
@@ -652,7 +652,7 @@ void RNTourDialog::lex(){
 						event = 0;
 						//std::cout << "Event" << std::endl;
 						//RNUtils::printList<std::string>(tokens);
-						eventstruct currentContEvent = events.at(eventName);
+						wevent_t currentContEvent = events.at(eventName);
 						currentContEvent.eventFunction = str;
 						std::cout << str << std::endl;
 						std::cout << eventName << std::endl;
@@ -820,13 +820,13 @@ void RNTourDialog::lex(){
 	}
 }
 
-void RNTourDialog::parsemain(){
+void RNTourDialog::parseEvents(){
 	printf("ADIOOOOOOOOOOOOS\n");
-	std::map<std::string, eventstruct>::iterator mapa = events.begin();
+	std::map<std::string, wevent_t>::iterator mapa = events.begin();
 	int ini = 0;
 	
 	if(mapa != events.end()){
-		eventstruct content = mapa->second;
+		wevent_t content = mapa->second;
 		
 		parseEvents(mapa->first, &content, ini);
 		mapa->second = content;
@@ -1564,7 +1564,7 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 					str = "";
 					state = 0;
 					tok = "";
-				} else if(tok != "" and (tok != RW_AND_STR and tok != RW_OR_STR and tok != RW_NOT_STR) and std::regex_match(tok, std::regex("[a-zA-Z_$][a-zA-Z_$0-9]*"))){
+				} else if(tok != "" and (tok != RW_AND_STR and tok != RW_OR_STR and tok != RW_NOT_STR) and std::regex_match(tok, std::regex(REGEX_STR))){
 					tokens.emplace_back(TOK_VAR2PTS_STR + tok);
 				} else if(tok == RW_AND_STR){
 					tokens.emplace_back(TOK_AND_STR);
@@ -1613,7 +1613,7 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 					tokens.emplace_back(TOK_EFC_STR);
 					evalfunc = 0;
 				} else {
-					if(tok != "" and std::regex_match(tok, std::regex("[a-zA-Z_$][a-zA-Z_$0-9]*"))){
+					if(tok != "" and std::regex_match(tok, std::regex(REGEX_STR))){
 						tokens.emplace_back(TOK_VAR2PTS_STR + tok);
 					} else if(state == 2){
 						if(str != ""){
@@ -1634,7 +1634,7 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 							}
 							str = "";
 							state = 0;
-						} else if(tok != "" and std::regex_match(tok, std::regex("[a-zA-Z_$][a-zA-Z_$0-9]*"))){
+						} else if(tok != "" and std::regex_match(tok, std::regex(REGEX_STR))){
 							tokens.emplace_back(TOK_VAR2PTS_STR + tok);
 						}
 						tok = "";
@@ -1653,7 +1653,7 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 						}
 						str = "";
 						state = 0;
-					} else if(tok != "" and std::regex_match(tok, std::regex("[a-zA-Z_$][a-zA-Z_$0-9]*"))){
+					} else if(tok != "" and std::regex_match(tok, std::regex(REGEX_STR))){
 						tokens.emplace_back(TOK_VAR2PTS_STR + tok);
 					}
 					tok = "";
@@ -1712,7 +1712,7 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 		it++;
 	}	
 	if(tok != "" or str != ""){
-		if(tok != "" and std::regex_match(tok, std::regex("[a-zA-Z_$][a-zA-Z_$0-9]*"))){
+		if(tok != "" and std::regex_match(tok, std::regex(REGEX_STR))){
 			tokens.emplace_back(TOK_VAR2PTS_STR + tok);
 		} else if(state == 2){
 			if(str != ""){
@@ -1899,7 +1899,7 @@ std::string RNTourDialog::assignArray(std::map<std::string, std::string> simbolo
   
 }
 
-void RNTourDialog::parseEvents(std::string eventName, eventstruct* content, int cont){
+void RNTourDialog::parseEvents(std::string eventName, wevent_t* content, int cont){
 	printf("HOLAAAAAAAAAAA\n");	
 	//std::list<std::string> evTokens = content->event_tokens;	
 	std::string nameFunction = content -> eventFunction;
@@ -1963,13 +1963,13 @@ void RNTourDialog::parseEvents(std::string eventName, eventstruct* content, int 
 
 	}
 
-	std::map<std::string, eventstruct>::iterator mapa = events.begin();
-	std::map<std::string, eventstruct>::iterator it2 = std::next(mapa,cont_events);
+	std::map<std::string, wevent_t>::iterator mapa = events.begin();
+	std::map<std::string, wevent_t>::iterator it2 = std::next(mapa,cont_events);
 
 
 	
 	if(it2 != events.end()){
-		eventstruct content = it2->second;
+		wevent_t content = it2->second;
 		
 		parseEvents(it2->first, &content, cont_events);
 		it2->second = content;

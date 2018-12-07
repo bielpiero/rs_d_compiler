@@ -18,7 +18,7 @@ class RNTourDialog{
 			int requiredArguments;
 			std::string result;
 		};
-		struct eventstruct{
+		struct wevent_t{
 			int requiredArguments;
 			std::string eventFunction;
 			//std::list<std::string> arguments;
@@ -27,10 +27,10 @@ class RNTourDialog{
 		RNTourDialog(/*RNGesturesTask* head, DorisLipSync* lips*/);
 		virtual ~RNTourDialog();
 		void lex();
-		void parsemain();
+		void parseEvents();
 		void parse();
 		void parse(std::string functionName, wcontent_t* content);
-		void parseEvents(std::string eventName, eventstruct* content, int cont);
+		void parseEvents(std::string eventName, wevent_t* content, int cont);
 		
 	private:
 		void loadPredifinedSymbols();
@@ -52,7 +52,7 @@ class RNTourDialog{
 		std::map<std::string, wcontent_t > functions;
 		std::map<std::string, std::string> globalSymbols;
 		std::ifstream file;
-		std::map<std::string, eventstruct> events;
+		std::map<std::string, wevent_t> events;
 		//DorisLipSync* lips;
 		//RNGesturesTask* head;
 };

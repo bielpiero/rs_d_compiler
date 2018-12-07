@@ -1,6 +1,9 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
+
+#define REGEX_STR "[a-zA-Z_$][a-zA-Z_$0-9]*"
+
 #define RW_FUNCTION_STR "function"
 #define RW_END_FUNCTION_STR "endfunction"
 #define RW_IF_STR "if"
