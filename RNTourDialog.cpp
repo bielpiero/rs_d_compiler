@@ -8,7 +8,7 @@ RNTourDialog::RNTourDialog(/*RNGesturesTask* head, DorisLipSync* lips*/){
 	std::setlocale(LC_ALL, "es_ES");
 	//this->head = head;
 	//this->lips = lips;
-	file.open("tts/disam-01.text");
+	file.open("tts/program.doris");
 	if(!file){
 		printf("could not load file\n");
 	} else {
