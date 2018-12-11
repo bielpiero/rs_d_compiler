@@ -93,10 +93,10 @@ void RNTourDialog::lex(){
 	int expr_started = 0, elsestate = 0, equal_started = 0; 
 	int array_started = 0;
 	int equalfound = 0;
-	int contdospts = 0; //MIO
-	int contlineas = 1; //MIO
-	int dame_pos = 0; //MIO
-	int soyvector = 0;//MIO
+	int double_dot_counter = 0; //MIO
+	int lines_counter = 1; //MIO
+	int get_pos = 0; //MIO
+	int current_vector = 0;//MIO
 	std::string functionName = "";
 	int functionNameStatus = 0;
 	int event = 0;
@@ -127,13 +127,13 @@ void RNTourDialog::lex(){
 					str = "";
 					state = 0;
 					tok = "";
-					} else {
-						tok ="";
-						state = 1;
-						isnumber = 0;
-					}
+				} else {
+					tok ="";
+					state = 1;
+					isnumber = 0;
+				}
 			} else if(tok != "" and expr_started == 0 and std::regex_match(tok, std::regex(REGEX_STR))){
-				if(dame_pos == 0){	
+				if(get_pos == 0){	
 					if(functionarguments == 1){
 						tokens.insert(tpos, TOK_ARG2PTS_STR + tok);
 						argCount++;
@@ -141,7 +141,7 @@ void RNTourDialog::lex(){
 						tokens.insert(tpos, TOK_VAR2PTS_STR + tok);
 					}
 				
-				tok = "";
+					tok = "";
 				}
 			} else if(state == 1 and expr_started == 1){
 				tok = " ";
@@ -161,7 +161,7 @@ void RNTourDialog::lex(){
 		} else if(*it == '\n' or *it == '\t'){
 			tok = tok.substr(0, tok.size() - 1);
 			if(*it == '\n'){
-				contlineas = contlineas +1; //  MIO esto no se si deja de funcionar bien
+				lines_counter = lines_counter +1; //  MIO esto no se si deja de funcionar bien
 
 			}
 
@@ -200,27 +200,27 @@ void RNTourDialog::lex(){
 			} else if(retstarted == 1 and expr_started == 1){
 
 				if(cnd != ""){
-				tokens.insert(tpos, TOK_EXP2PTS_STR + cnd);
-				expr_started = 0;
-				retstarted = 0;
-				state = 0;
-				cnd = "";
-				tok = "";
+					tokens.insert(tpos, TOK_EXP2PTS_STR + cnd);
+					expr_started = 0;
+					retstarted = 0;
+					state = 0;
+					cnd = "";
+					tok = "";
 				} else {
-					fprintf(stderr, "Error: expresion expected in line %d \n", contlineas); //MIO
+					fprintf(stderr, "Error: expresion expected in line %d \n", lines_counter); //MIO
 				}
 
 			} else if(equal_started == 1 and expr_started == 1){
 
 				if(cnd != ""){
-				tokens.insert(tpos, TOK_EXP2PTS_STR + cnd);
-				expr_started = 0;
-				equal_started = 0;
-				state = 0;
-				cnd = "";
-				tok = "";
+					tokens.insert(tpos, TOK_EXP2PTS_STR + cnd);
+					expr_started = 0;
+					equal_started = 0;
+					state = 0;
+					cnd = "";
+					tok = "";
 				} else {
-					fprintf(stderr, "Error: Expresion expected in line %d \n", contlineas); //MIO
+					fprintf(stderr, "Error: Expresion expected in line %d \n", lines_counter); //MIO
 				} 
 
 			} else if(state == 1 and expr_started == 1){
@@ -423,14 +423,8 @@ void RNTourDialog::lex(){
 			tok = "";
 		} else if(tok == "[" and equal_started == 1){
 			it = std::prev(it,1);
-			if(*it == ' ' or *it == '='){
-				//array_started = 1;
-				//expr_started = 0; //MIO
-				//tok = "";
-				//state = 1;
-
-			}else{
-				soyvector = 1;
+			if(*it != ' ' or *it != '='){
+				current_vector = 1;
 				cnd += tok;
 				tok = ""; // ESTO ES PARA EXPRESIONES DEL TIPO hola=vector[#2]
 			}
@@ -449,27 +443,20 @@ void RNTourDialog::lex(){
 			}
 			it = std::next(it,1);
 		}else if(*it == '[' and tok != ""){
-			if(dame_pos == 0){
+			if(get_pos == 0){
 				it = std::prev(it,1);
 				if(*it != ' '){ // PARA VER QUE EL CORCHETE ESTA JUNTO A LA VARIABLE Y NO ES UNA DECLARACION TIPO vector = [asasdfa]
-					int letras = 0;
-					std::string::iterator it_tok = tok.begin();
-					while(it_tok != tok.end()){
-						
-						letras = letras + 1;
-						it_tok++;
-					}
-					std::string tok_buena;
-					tok_buena = tok.substr(0,(letras-1));
-					tokens.insert(tpos, TOK_VAR2PTS_STR + tok_buena);
-					dame_pos = 1;
+					
+					tok = tok.substr(0,(tok.size()-1));
+					tokens.insert(tpos, TOK_VAR2PTS_STR + tok);
+					get_pos = 1;
 					tok= "";
 				}
 				it = std::next(it,1);
 			}else{
 				cnd += *it;
 				tok = "";
-				dame_pos += 1;
+				get_pos += 1;
 			}
 				
 
@@ -511,7 +498,7 @@ void RNTourDialog::lex(){
 
 				cnd += TOK_NUM2PTS_STR;
 				//cnd += *it;
-			}if(dame_pos >= 1){
+			}if(get_pos >= 1){
 				cnd += *it;
 			} 
 			tok = "";
@@ -530,20 +517,20 @@ void RNTourDialog::lex(){
 				//	str = "";
 				//	func_arg += 1;
 				//	} else{
-				//		fprintf(stderr, "Error: Expected argument in line %d \n", contlineas);
+				//		fprintf(stderr, "Error: Expected argument in line %d \n", lines_counter);
 				//	}
 				if(array_started == 0){	
 					if(functionarguments == 1 ){
 						if(str != ""){
-						tokens.insert(tpos, TOK_ARG2PTS_STR + str);
-						argCount++; 
+							tokens.insert(tpos, TOK_ARG2PTS_STR + str);
+							argCount++; 
 					
-						}else {
-							fprintf(stderr, "Error: Expected argument in line %d \n", contlineas);
+						} else {
+							fprintf(stderr, "Error: Expected argument in line %d \n", lines_counter);
 						} 
 					} else {
 						if(str !=""){
-						tokens.insert(tpos, TOK_VAR2PTS_STR + str);
+							tokens.insert(tpos, TOK_VAR2PTS_STR + str);
 						}
 					}
 					str = "";
@@ -556,11 +543,11 @@ void RNTourDialog::lex(){
 			} else if(state == 2){
 				if(isnumber == 1){
 					if(array_started == 0){
-					tokens.insert(tpos, TOK_NUM2PTS_STR + str);
-					isnumber = 0;
-					state = 1;
-					str = "";
-					tok = "";
+						tokens.insert(tpos, TOK_NUM2PTS_STR + str);
+						isnumber = 0;
+						state = 1;
+						str = "";
+						tok = "";
 					} else {
 						cnd += tok;
 						state = 1;
@@ -592,7 +579,7 @@ void RNTourDialog::lex(){
 							tokens.insert(tpos, TOK_ARG2PTS_STR + str);
 							argCount++;
 						}else if(str == "" and argCount > 0){
-							fprintf(stderr, "Error: Expected argument in line %d \n", contlineas); //MIO
+							fprintf(stderr, "Error: Expected argument in line %d \n", lines_counter); //MIO
 						}
 						functionarguments = 0;
 					} else if(ifstarted == 1){
@@ -606,7 +593,7 @@ void RNTourDialog::lex(){
 							expr_started = 0;
 							cnd = "";
 						} else{
-							fprintf(stderr, "Error: no condition in line: %d \n", contlineas); //MIO 
+							fprintf(stderr, "Error: no condition in line: %d \n", lines_counter); //MIO 
 						}
 					} else if(whilestarted == 1){
 						if(cnd != ""){ // MIO
@@ -619,25 +606,25 @@ void RNTourDialog::lex(){
 							cnd = "";
 						}
 						else{
-							fprintf(stderr, "Error: no condition, line: %d \n", contlineas); // MIO
+							fprintf(stderr, "Error: no condition, line: %d \n", lines_counter); // MIO
 						}
 					} else if(forstarted == 1){// MIO
 						if( cnd != ""){
-							if (contdospts == 2){
-								tokens.insert(tpos, "EXP3:" + cnd);
+							if (double_dot_counter == 2){
+								tokens.insert(tpos, "EXP:" + cnd);
 								tokens.insert(tpos, TOK_BFOR2PTS_STR + std::to_string(forcounter));
 								tokens.insert(tpos, TOK_EFOR2PTS_STR + std::to_string(forcounter++));
 								tpos = std::prev(tpos, 1);
 								forstarted = 0;
 								expr_started = 0;
-								contdospts = 0;
+								double_dot_counter = 0;
 								cnd = "";
 
 							}
 							else {
 
 								
-								fprintf(stderr, "Error: no third condition in line %d \n", contlineas);
+								fprintf(stderr, "Error: no third condition in line %d \n", lines_counter);
 								
 								expr_started = 0;
 							}
@@ -707,7 +694,7 @@ void RNTourDialog::lex(){
 			tok = "";
 		} else if(tok == "]"){ 
 			if(state == 1 or state == 2){ // MIO en la condicion solo estaba state == 1, state == 2 es MIO
-				if(array_started == 0 and soyvector == 0){
+				if(array_started == 0 and current_vector == 0){
 				tokens.insert(tpos, TOK_OPT2PTS_STR + str);
 				state = 0;
 				tok = "";
@@ -718,7 +705,7 @@ void RNTourDialog::lex(){
 					//tok="";
 					//cnd ="";
 					//state = 0;
-				}else if (soyvector == 1){
+				}else if (current_vector == 1){
 					cnd += tok;
 					//tokens.insert(tpos, TOK_EXP2PTS_STR + cnd);
 					tok = "";
@@ -739,15 +726,15 @@ void RNTourDialog::lex(){
 				}
 
 		}else if(*it == ']'){
-			if(dame_pos == 1){
+			if(get_pos == 1){
 
 				tokens.insert(tpos, "POS:" + cnd);
 				cnd = "";
-				dame_pos = 0; 
+				get_pos = 0; 
 				tok = "";
 			}else{
 				cnd += *it;
-				dame_pos -= 1;
+				get_pos -= 1;
 			}
 
 
@@ -762,7 +749,7 @@ void RNTourDialog::lex(){
 				if(*it == '0' or *it == '1' or *it == '2' or *it == '3' or *it == '4' or *it == '5' or *it == '6' or *it == '7' or *it == '8' or *it == '9'){
 					it = std::prev(it,1);
 					if( *it != '#' and *it != '0'  and *it != '1' and *it != '2' and *it != '3' and *it != '4' and *it != '5' and *it != '6' and *it != '7' and *it != '8' and *it != '9'){
-						fprintf(stderr, "Error: Expected # symbol in line %d \n", contlineas ); //MIO
+						fprintf(stderr, "Error: Expected # symbol in line %d \n", lines_counter ); //MIO
 					}
 					it = std::next(it,1);
 				}//if (array_started == 1 and isnumber == 0){
@@ -781,47 +768,46 @@ void RNTourDialog::lex(){
 					isnumber = 1;
 				}
 			} else if(expr_started == 1 and tok == ":" and forstarted == 1) {
-					if (contdospts == 0){
+					if (double_dot_counter == 0){
 						if(cnd != "" or cnd !=" "){
-						tokens.insert(tpos, "EXP1:" + cnd);
+						tokens.insert(tpos, "EXP:" + cnd);
 						cnd ="";
 						tok ="";
 						} else{
-							fprintf(stderr,"Error: no first condition in line %d \n", contlineas);
+							fprintf(stderr,"Error: no first condition in line %d \n", lines_counter);
 						}
-					} else if(contdospts == 1 ){
+					} else if(double_dot_counter == 1 ){
 						if(cnd != "" or cnd != " "){
-						tokens.insert(tpos, "EXP2:" + cnd);
+						tokens.insert(tpos, "EXP:" + cnd);
 						cnd = "";
 						tok = "";
 						}else{
-							fprintf(stderr, "Error: no second condition in line %d\n", contlineas );
+							fprintf(stderr, "Error: no second condition in line %d\n", lines_counter );
 						}
 					}
-				contdospts = contdospts + 1;
+				double_dot_counter = double_dot_counter + 1;
 			
 			} else {
 				str += tok;
 				tok = "";
 			} 
-		}else if(dame_pos >= 1){
+		}else if(get_pos >= 1){
 			cnd += *it; //ARRAY POS
 			
 		}else if (varstarted == 1){
 			var += tok;
 			tok = "";
 		} else if(state == 0 and expr_started == 1 and infunction ==1 and tok != "(" and tok != " "){ // FUNCION MIA me sirve para ver que me no venga nada raro detras de un if while...
-			fprintf(stderr, "Error: Expected ( in line %d \n", contlineas);
+			fprintf(stderr, "Error: Expected ( in line %d \n", lines_counter);
 
 		}else if(state == 0 and functionarguments == 1 and functionNameStatus == 0 and tok != "(" and tok != " "){
-			fprintf(stderr, "Error: Expected ( in line %d \n", contlineas);
+			fprintf(stderr, "Error: Expected ( in line %d \n", lines_counter);
 		
 	  	}
 	}
 }
 
 void RNTourDialog::parseEvents(){
-	printf("ADIOOOOOOOOOOOOS\n");
 	std::map<std::string, wevent_t>::iterator mapa = events.begin();
 	int ini = 0;
 	
