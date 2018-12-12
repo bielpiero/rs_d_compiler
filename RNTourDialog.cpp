@@ -8,7 +8,7 @@ RNTourDialog::RNTourDialog(/*RNGesturesTask* head, DorisLipSync* lips*/){
 	std::setlocale(LC_ALL, "es_ES");
 	//this->head = head;
 	//this->lips = lips;
-	file.open("tts/program.doris");
+	file.open("tts/disam-01.text");
 	if(!file){
 		printf("could not load file\n");
 	} else {
@@ -611,7 +611,7 @@ void RNTourDialog::lex(){
 					} else if(forstarted == 1){// MIO
 						if( cnd != ""){
 							if (double_dot_counter == 2){
-								tokens.insert(tpos, "EXP:" + cnd);
+								tokens.insert(tpos, "EXP:" + cnd + ")");
 								tokens.insert(tpos, TOK_BFOR2PTS_STR + std::to_string(forcounter));
 								tokens.insert(tpos, TOK_EFOR2PTS_STR + std::to_string(forcounter++));
 								tpos = std::prev(tpos, 1);
@@ -770,7 +770,7 @@ void RNTourDialog::lex(){
 			} else if(expr_started == 1 and tok == ":" and forstarted == 1) {
 					if (double_dot_counter == 0){
 						if(cnd != "" or cnd !=" "){
-						tokens.insert(tpos, "EXP:" + cnd);
+						tokens.insert(tpos, "EXP:" + cnd + ":");
 						cnd ="";
 						tok ="";
 						} else{
@@ -778,7 +778,7 @@ void RNTourDialog::lex(){
 						}
 					} else if(double_dot_counter == 1 ){
 						if(cnd != "" or cnd != " "){
-						tokens.insert(tpos, "EXP:" + cnd);
+						tokens.insert(tpos, "EXP:" + cnd + ":");
 						cnd = "";
 						tok = "";
 						}else{
@@ -849,6 +849,8 @@ void RNTourDialog::parse(std::string functionName, wcontent_t* content){
 	std::list<std::string>::iterator it = functionTokens.begin();
 	std::stack<std::string> ifIdsStack;
 	std::stack<std::string> whileIdsStack;
+	std::stack<std::string> forIdsStack;
+	std::vector<int>  vect_for = {0,0,0,0,0};
 	while(it != functionTokens.end()){
 		std::list<std::string>::iterator it2 = std::next(it, 1);
 		std::list<std::string>::iterator it3 = std::next(it, 2);
@@ -1124,6 +1126,116 @@ void RNTourDialog::parse(std::string functionName, wcontent_t* content){
 			} else {
 				it++;
 			}
+		}else if(*it == "FOR"){
+
+			std::list<std::string>::iterator it5 = std::next(it, 4);
+			std::vector<std::string> for_var;
+
+			int pos_for;
+
+			if(not forIdsStack.empty()){
+
+			
+				std::string for_cont = forIdsStack.top();
+				int num = std::stof(for_cont);
+			 	pos_for = num + 1;
+
+			}else{
+				pos_for = 0;
+
+			}
+			if(vect_for[pos_for] == 0){
+		
+
+				std::string r1 = evaluateExpression((*it2).substr(4), *functionSymbols);
+				for_var = RNUtils::split(r1, ",");
+				
+
+				if(functionSymbols->find(for_var[1]) == functionSymbols->end()){
+						functionSymbols->emplace(for_var[1], for_var[0]);
+				} else {
+					
+					functionSymbols->at(for_var[1]) = for_var[0];
+				
+				}
+
+				std::string r2 = evaluateExpression((*it3).substr(4), *functionSymbols);
+				std::string r3 = evaluateExpression((*it4).substr(4), *functionSymbols);
+				for_var = RNUtils::split(r3, ",");
+
+				if(functionSymbols->find(for_var[1]) == functionSymbols->end()){
+						functionSymbols->emplace(for_var[1], for_var[0]);
+					} else {
+						functionSymbols->at(for_var[1]) = for_var[0];
+					}
+
+
+				if(r2 == TOK_NUM2P1_STR){
+
+				it = std::next(it,5);
+				forIdsStack.push((*it5).substr(5));
+				
+			
+
+				}else{
+					std::string endforname = TOK_EFOR2PTS_STR + (*it5).substr(5);
+					while((*it) != endforname){
+					it++;
+					}
+				}
+			
+			}else{
+				
+				std::string r2 = evaluateExpression((*it3).substr(4), *functionSymbols);
+				std::cout << r2 << '\n';
+				std::string r3 = evaluateExpression((*it4).substr(4), *functionSymbols);
+				for_var = RNUtils::split(r3, ",");
+				if(functionSymbols->find(for_var[1]) == functionSymbols->end()){
+						functionSymbols->emplace(for_var[1], for_var[0]);
+					} else {
+						functionSymbols->at(for_var[1]) = for_var[0];
+					}
+
+
+				if(r2 == TOK_NUM2P1_STR){
+					it = std::next(it,5);
+					forIdsStack.push((*it5).substr(5));
+					
+					
+
+
+				}else{
+					std::string endforname = TOK_EFOR2PTS_STR + (*it5).substr(5);
+					vect_for[std::stof((*it5).substr(5))] = 0;
+					
+				
+					while((*it) != endforname){
+
+					it++;
+					}
+
+					it++;
+				}
+			}
+			
+		
+
+		}else if((*it).substr(0,4) == "EFOR"){
+
+			if(not forIdsStack.empty()){
+				if(forIdsStack.top() == (*it).substr(5)){
+					vect_for[std::stof((*it).substr(5))] += 1;
+					forIdsStack.pop();
+					std::string bforname = TOK_BFOR2PTS_STR + (*it).substr(5);
+					while((*it) != bforname){
+						it = std::prev(it);
+					}
+					it = std::prev(it, 4);
+				}
+			} else {
+				it++;
+			}
+
 		}else if((*it) == "SIZEOF"){
 			if((*it2).substr(0,3) == TOK_EXP_STR){
 				std::string size = evaluateExpression((*it2).substr(4),*functionSymbols);
@@ -1144,7 +1256,7 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 	std::stack<std::string> exprStack;
 	std::string result = "";
 	std::list<std::string> tokens = tokenizeExpCond(expr);
-	RNUtils::printList<std::string>(tokens);
+	//RNUtils::printList<std::string>(tokens);
 	std::list<std::string>::iterator itokens;
 
 	
@@ -1156,9 +1268,30 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 			std::list<std::string>::iterator it2 = std::next(itokens, 1);
 			std::map<std::string, std::string>::iterator var = symbols.find((*itokens).substr(4));
 			if(var != symbols.end()){
-				if(it2 == tokens.end() or (*it2).substr(0, 3) != "POS"){
+				if((it2 == tokens.end() or (*it2).substr(0, 3) != "POS") and (*it2) != "EQ"){
 					*itokens = var->second;
 
+				}else if((*it2) == "EQ"){
+					
+					std::list<std::string>::iterator it3 = std::next(itokens, 2);
+					std::string rad = evaluateExpression((*it3).substr(4), symbols);
+					it3 = tokens.erase(it3);
+					it2 = tokens.erase(it2);
+					std::string chain = rad + "," + (*itokens).substr(4);
+					*itokens = chain;
+
+					
+					
+					/*if(symbols.find((*itokens).substr(4)) == symbols.end()){
+						symbols.emplace((*itokens).substr(4), rad);
+					} else {
+						printf("ESTOY AQUIIIUIUI \n");
+						symbols[(*itokens).substr(4)] = rad;
+					}
+					std::cout << rad << '\n';
+					std::cout << (*itokens).substr(4) << '\n';*/
+		
+					
 				}
 
 			} else {
@@ -1249,7 +1382,7 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 			}
 		}
 	}
-	RNUtils::printList<std::string>(tokens);
+	//RNUtils::printList<std::string>(tokens);
 	if(tokens.size() > 1 ){
 		solveExpParenthesis(&tokens);
 	}
@@ -1257,6 +1390,8 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 		solveExp(&tokens);
 	}
 	result = tokens.front();
+	
+
 	return result;
 }
 
@@ -1486,6 +1621,7 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 	int expr_started = 0;
 	int cont_vect = 0;
 	int val_size = 0;
+	int eq_started = 0;
 	
 	while(it != expr_cond.end()){
 		if(tok == RW_AND_STR and (*it == '(' or *it == ')' or *it == '\"' or *it == '#')){
@@ -1500,46 +1636,59 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 		} 
 
 		if(expr_started == 1){
-			tok += *it;
 			
-			if(*it == ' '){
-				tok = " ";
-			} else if(*it == ','){
-				tokens.emplace_back(TOK_EXP2PTS_STR + cnd);
-				cnd = "";
-			} else if(*it == ')'){
-				tokens.emplace_back(TOK_EXP2PTS_STR + cnd);
-				expr_started = 0;
-				if(evalfunc == 1){
-					tokens.emplace_back(TOK_EFC_STR);
-					evalfunc = 0;
-				}
-			}else if(*it == ']' and cont_vect > 0){ 
-				
-			
-				cnd += tok;
-				tok = "";
-				cont_vect = cont_vect - 1;
-				
-
-				
-			}else if( *it == ']' and cont_vect == 0){
-					tokens.emplace_back("POS:" + cnd);
-				    expr_started = 0;
+			if(eq_started == 0){
+				tok += *it;
+				if(*it == ' '){
+					tok = " ";
+				} else if(*it == ','){
+					tokens.emplace_back(TOK_EXP2PTS_STR + cnd);
 					cnd = "";
+				} else if(*it == ')'){
+					tokens.emplace_back(TOK_EXP2PTS_STR + cnd);
+					expr_started = 0;
+					if(evalfunc == 1){
+						tokens.emplace_back(TOK_EFC_STR);
+						evalfunc = 0;
+					}
+				}else if(*it == ']' and cont_vect > 0){ 
+					
+				
+					cnd += tok;
+					tok = "";
+					cont_vect = cont_vect - 1;
 					
 
-				
-			}else if(*it == '['){
-				cnd += tok;
-				tok = "";
-				cont_vect += 1;
+					
+				}else if( *it == ']' and cont_vect == 0){
+						tokens.emplace_back("POS:" + cnd);
+					    expr_started = 0;
+						cnd = "";
+						
+
+					
+				}else if(*it == '['){
+					cnd += tok;
+					tok = "";
+					cont_vect += 1;
 
 
 
-			}else {
-				cnd += tok;
-				tok = ""; //MIO 
+				}else {
+					cnd += tok;
+					tok = ""; //MIO 
+				}
+			}else{
+				if(*it != ':' and *it != ')'){
+					
+					tok += *it;
+					
+				}else{
+					
+					tokens.emplace_back(TOK_EXP2PTS_STR + tok);
+					expr_started = 0;
+					eq_started = 0;
+				}
 			}
 		} else {
 			if(*it == ' '){
@@ -1579,6 +1728,11 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 					state = 0;
 				}
 				tok = "";
+			}else if(*it == '='){
+				tokens.emplace_back("EQ");
+				expr_started = 1;
+				eq_started = 1;
+
 			} else if(*it == '('){
 				if(tok != ""){
 					if(tok != "sizeof"){
