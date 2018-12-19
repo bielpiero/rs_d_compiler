@@ -710,22 +710,6 @@ void RNTourDialog::lex(){
 	}
 }
 
-void RNTourDialog::parseEvents(){
-	std::map<std::string, wevent_t>::iterator mapa = events.begin();
-	int ini = 0;
-	
-	if(mapa != events.end()){
-		wevent_t content = mapa->second;
-		
-		parseEvents(mapa->first, &content, ini);
-		mapa->second = content;
-
-
-	}else{
-		printf("NO HAY EVENTOS\n");
-	}
-}
-
 void RNTourDialog::parse(){
 
 
@@ -1158,10 +1142,6 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 	std::stack<std::string> exprStack;
 	std::string result = "";
 	std::list<std::string> tokens = tokenizeExpCond(expr);
-	std::cout << "Evaluation expression: ";
-	RNUtils::printList<std::string>(tokens);
-	std::cout << "with tokens: ";
-	RNUtils::printMap<std::string, std::string>(symbols);
 	std::list<std::string>::iterator itokens;
 
 	
@@ -1173,7 +1153,6 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 			std::map<std::string, std::string>::iterator var = symbols.find((*itokens).substr(4));
 			if(var != symbols.end()){
 				if(it2 == tokens.end() or ((*it2).substr(0, 3) != TOK_POS_STR and (*it2) != TOK_EQ_STR)){
-					printf("lo ha encontrao\n");
 					*itokens = var->second;
 
 				} else if((*it2) == TOK_EQ_STR){
@@ -1192,13 +1171,13 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 			}
 		
 		} else if((*itokens).substr(0, 3) == TOK_POS_STR){	
-			
+			std::cout << "entra aqui en la reverga esta..." << std::endl;
 			std::list<std::string>::iterator it2 = std::prev(itokens,1); //MIO
 			
 			std::map<std::string, std::string>::iterator var_array = symbols.find((*it2).substr(4));
 			
 			if(var_array != symbols.end()){
-				
+				std::cout << "Va a buscar en el array... " << std::endl << (*it2).substr(4) << ", la posicion " << (*itokens).substr(4) << std::endl;
 				*it2 = arrayValue(symbols, (*it2).substr(4), (*itokens).substr(4)); // FUNCION POR DEFINIR
 				//itokens = tokens.erase(itokens); // BORRAR LO QUE ESTABA MARCANDO it2
 				itokens = tokens.erase(itokens);
@@ -1255,7 +1234,7 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 			}
 		}
 	}
-	//RNUtils::printList<std::string>(tokens);
+
 	if(tokens.size() > 1 ){
 		solveExpParenthesis(&tokens);
 	}
@@ -1263,7 +1242,6 @@ std::string RNTourDialog::evaluateExpression(std::string expr, std::map<std::str
 		solveExp(&tokens);
 	}
 	result = tokens.front();
-	std::cout << "-------> Result: " << result << std::endl;
 
 	return result;
 }
@@ -1719,7 +1697,6 @@ std::list<std::string> RNTourDialog::tokenizeExpCond(std::string expr_cond){
 
 				} else{
 					tok += *it; 
-					//MIO
 				}
 			}
 		}
@@ -1784,7 +1761,6 @@ std::string RNTourDialog::arrayValue(std::map<std::string, std::string> simbolos
 	int res;
 
 	indice = evaluateExpression(position, simbolos);
-
 	if(indice.substr(0,3) == TOK_STR_STR){
 		fprintf(stderr,"Posicion no valida\n");
 	} else{
@@ -1795,7 +1771,7 @@ std::string RNTourDialog::arrayValue(std::map<std::string, std::string> simbolos
 	if(busca != simbolos.end()){
 		
 		contenido = busca->second;
-		cont_indices = RNUtils::split(contenido, ",");
+		cont_indices = RNUtils::split(contenido.substr(4), ",");
 	} else {
 		fprintf(stderr, "error: Undefined variable in this scope\n");
 	}
@@ -1899,140 +1875,6 @@ std::string RNTourDialog::assignArray(std::map<std::string, std::string> simbolo
   
 }
 
-void RNTourDialog::parseEvents(std::string eventName, wevent_t* content, int cont){
-	printf("HOLAAAAAAAAAAA\n");	
-	//std::list<std::string> evTokens = content->event_tokens;	
-	std::string nameFunction = content -> eventFunction;
-	//std::list<std::string>::iterator it = evTokens.begin();
-	std::string nom_event = eventName;
-	//std::cout << nom_event << std::endl;
-	int arg = content -> requiredArguments;
-	int arguments_function = 0;
-	int cont_events = cont + 1;
-
-	std::map<std::string, wcontent_t>::iterator busca;
-	busca = functions.find(nameFunction);
-	if(busca != functions.end()){
-		wcontent_t cont_func = busca -> second;
-		std::list<std::string> funcTokens = cont_func.tokens;
-		std::list<std::string>::iterator it_func = funcTokens.begin();
-		while(it_func != funcTokens.end()){
-			if((*it_func).substr(0,3) == "ARG"){
-				arguments_function++;
-			}else{
-				fprintf(stderr, "No devuelve nada\n");
-			}
-			it_func++;
-		}
-
-	}
-	if(nom_event == "onSPEAK"){
-		if(arg == arguments_function){
-			fprintf(stderr, "Todo correcto\n");
-		}else if(arg >= arguments_function){
-			fprintf(stderr, "Faltan argumentos\n");
-		}else if(arg <= arguments_function){
-			fprintf(stderr, "Sobran argumentos\n");
-		}
-	}else if(nom_event == "onRFID"){
-		if(arg == arguments_function){
-			fprintf(stderr, "Todo correcto\n");
-		}else if(arg >= arguments_function){
-			fprintf(stderr, "Faltan argumentos\n");
-		}else if(arg <= arguments_function){
-			fprintf(stderr, "Sobran argumentos\n");
-		}
-
-	}else if(nom_event == "A"){
-		if(arg == arguments_function){
-			fprintf(stderr, "Todo correcto\n");
-		}else if(arg >= arguments_function){
-			fprintf(stderr, "Faltan argumentos\n");
-		}else if(arg <= arguments_function){
-			fprintf(stderr, "Sobran argumentos\n");
-		}
-
-	}else if(nom_event == "B"){
-		if(arg == arguments_function){
-			fprintf(stderr, "Todo correcto\n");
-		}else if(arg >= arguments_function){
-			fprintf(stderr, "Faltan argumentos\n");
-		}else if(arg <= arguments_function){
-			fprintf(stderr, "Sobran argumentos\n");
-		}
-
-	}
-
-	std::map<std::string, wevent_t>::iterator mapa = events.begin();
-	std::map<std::string, wevent_t>::iterator it2 = std::next(mapa,cont_events);
-
-
-	
-	if(it2 != events.end()){
-		wevent_t content = it2->second;
-		
-		parseEvents(it2->first, &content, cont_events);
-		it2->second = content;
-
-
-	}else{
-		printf("NO HAY MÁS EVENTOS\n");
-	}
-
-
-
-
-
-
-
-
-
-
-	/*while(it != evTokens.end()){
-		if(nom_event == "onSPEAK"){
-			printf("HOLAAAAAAAAAAA\n");
-			if(arg == 1){
-				std::list<std::string>::iterator it2 = next(it,1);
-				if((*it2).substr(0,3) == "FNC"){
-					std::map<std::string, wcontent_t>::iterator busca;
-					busca = functions.find((*it2).substr(4));
-					if(busca != functions.end()){
-						wcontent_t content = busca->second;
-						std::list<std::string> funcTokens = content.tokens;
-						std::list<std::string>::iterator it_func = funcTokens.begin();
-						while(it_func != funcTokens.end()){
-							if((*it_func).substr(0,3) == "RET"){
-								std::string result = evaluateExpression((*it_func).substr(4),content.symbols);
-								if(result.substr(0,3) == "STR"){
-									fprintf(stderr, "Esta todo bien\n" );
-								}else{
-									fprintf(stderr, "No devuelve lo que se espera\n");
-								}
-
-							}else{
-								fprintf(stderr, "No devuelve nada\n");
-							}
-							it++;
-						}
-
-
-					}else{
-						fprintf(stderr, "La funcion no existe\n");
-					}
-
-				}else{
-					fprintf(stderr, "Error en el evento\n");
-				}
-
-
-			}else{
-				fprintf(stderr, "Numero invalido de argumentos\n" );
-			}
-
-		}
-		it++;		
-	}*/
-} 
 std::string RNTourDialog::assignSize(std::string word_size){
 	std::string chain = word_size;
 	std::vector<std::string> cont_size;
@@ -2047,9 +1889,11 @@ std::string RNTourDialog::assignSize(std::string word_size){
 			size = chain.substr(4).size();
 			fprintf(stderr,"The length of the string is %i \n", size);
 
-		}else if(chain.substr(0,3) == TOK_NUM_STR) {
+		} else if(chain.substr(0,3) == TOK_NUM_STR) {
 			size = 1;
 			fprintf(stderr,"The length of the string is %i \n", size);
+		} else if(chain.substr(0, 3) == TOK_ARR_STR){
+			size = 1;
 		}
 	}else{
 		for(i = 0; i <=len ; i++){
@@ -2058,5 +1902,6 @@ std::string RNTourDialog::assignSize(std::string word_size){
 		fprintf(stderr,"The length of the vector is %i \n", size);
 	}
 	val =  TOK_NUM2PTS_STR + std::to_string(size);
+	std::cout << "-----> SIZEOF: " << word_size << "Size: " << val << std::endl;
 	return val;
 }

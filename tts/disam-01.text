@@ -12,6 +12,6 @@ function rfidEvent(tagsList)
 endfunction
 
 function main()
-	var tags = {"e280-1160-6000-0207-28b5-6834"}
+	var tags = {"e280-1160-6000-0207-28b5-6824"}
 	rfidEvent(tags)
 endfunction

@@ -27,11 +27,8 @@ class RNTourDialog{
 		RNTourDialog(/*RNGesturesTask* head, DorisLipSync* lips*/);
 		virtual ~RNTourDialog();
 		void lex();
-		void parseEvents();
 		void parse();
-		void parse(std::string functionName, wcontent_t* content);
-		void parseEvents(std::string eventName, wevent_t* content, int cont);
-		
+		void parse(std::string functionName, wcontent_t* content);		
 	private:
 		void loadPredifinedSymbols();
 
